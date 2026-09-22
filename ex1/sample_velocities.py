@@ -1,29 +1,26 @@
 # sample_velocities.py
 
+from pathlib import Path
+
 import numpy as np
 import matplotlib.pyplot as plt
 from robot import Robot
-from scipy.io import loadmat
 
-def sample_velocities():
-    # Load sample data
-    data = loadmat('sample_ground_truth.mat')
-    time = data['time'].flatten()
-    theta = data['theta']
-    theta_dot = data['theta_dot']
-    ground_truth_x = data['ground_truth_x'].flatten()
-    ground_truth_y = data['ground_truth_y'].flatten()
-    ground_truth_vx = data['ground_truth_vx'].flatten()
-    ground_truth_vy = data['ground_truth_vy'].flatten()
+HERE = Path(__file__).resolve().parent
 
-    # Create robot (matching sample data)
-    robot = Robot(
-        link_lengths=np.array([1.5, 2.5]),
-        link_masses=np.array([1.5, 2.5]),
-        joint_masses=np.array([1, 1]),
-        end_effector_mass=1
-    )
 
+def compute_kinematics(robot, theta, theta_dot):
+    """
+    Returns the end effector position and velocity at every time step.
+
+    Parameters:
+    robot : Robot object
+    theta : numpy array of shape (n, dof), joint angles; row i is time step i
+    theta_dot : numpy array of shape (n, dof), joint velocities
+
+    Returns:
+    x, y, vx, vy : numpy arrays of shape (n,)
+    """
     # Initialize arrays
     n = len(theta)
     x = np.zeros(n)
@@ -45,6 +42,30 @@ def sample_velocities():
 
     # Your code ends here
     # --------------- END STUDENT SECTION ----------------------------------------------------
+
+    return x, y, vx, vy
+
+
+def sample_velocities():
+    # Load sample data
+    data = np.load(HERE / 'sample_ground_truth.npz')
+    time = data['time'].flatten()
+    theta = data['theta']
+    theta_dot = data['theta_dot']
+    ground_truth_x = data['ground_truth_x'].flatten()
+    ground_truth_y = data['ground_truth_y'].flatten()
+    ground_truth_vx = data['ground_truth_vx'].flatten()
+    ground_truth_vy = data['ground_truth_vy'].flatten()
+
+    # Create robot (matching sample data)
+    robot = Robot(
+        link_lengths=np.array([1.5, 2.5]),
+        link_masses=np.array([1.5, 2.5]),
+        joint_masses=np.array([1, 1]),
+        end_effector_mass=1
+    )
+
+    x, y, vx, vy = compute_kinematics(robot, theta, theta_dot)
 
     # Sub-sample the data for plotting
     subsample_resolution = 10
